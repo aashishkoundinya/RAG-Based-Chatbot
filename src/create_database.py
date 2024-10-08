@@ -1,12 +1,11 @@
 from langchain_community.document_loaders import DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
-
 from langchain_openai import OpenAIEmbeddings
-# from langchain_community.vectorstores.chroma import Chroma
 from langchain_chroma import Chroma
-# from openai.error import RateLimitError
+
 import openai
+from openai import RateLimitError
 from dotenv import load_dotenv
 import os
 import shutil
@@ -60,15 +59,14 @@ def save_to_chroma(chunks: list[Document]):
         embedding_function=OpenAIEmbeddings(), persist_directory = CHROMA_PATH
     )
 
-    # for chunk in chunks:
-    #     try:
-    #         db.add_documents([chunk])
-    #     except RateLimitError:
-    #         print("Rate Limit Exceeded. Waiting for 60 seconds.....")
-    #         time.sleep(60)
-    #         db.add_documents([chunk])
+    for chunk in chunks:
+        try:
+            db.add_documents([chunk])
+        except RateLimitError:
+            print("Rate Limit Exceeded. Waiting for 60 seconds.....")
+            time.sleep(60)
+            db.add_documents([chunk])
 
-    db.add_documents(chunks)
     db.persist()
     print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}")
 
